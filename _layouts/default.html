@@ -75,6 +75,7 @@
     <script src="../node_modules/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js"></script>
     <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
     <script src="../node_modules/@blockcerts/blockcerts-verifier/dist/main.js"></script>
+    <script src="../node_modules/credential-handler-polyfill/dist/credential-handler-polyfill.min.js"></script>
 
     <script>
       const explorerAPI = {
@@ -83,9 +84,34 @@
         keyPropertyName: 'apikey'
       };
 
+      function verifyCredential (credential) {
+        const verifier = document.getElementsByClassName('blockcerts-verifier')[0];
+        verifier.src = credential;
+      }
+
       document.addEventListener('DOMContentLoaded', function () {
         const verifierElement = document.querySelectorAll('blockcerts-verifier')[0];
         verifierElement.explorerAPIs = [explorerAPI];
+
+        document
+          .getElementsByClassName('js-share-credential-btn')[0]
+          .addEventListener('click', async function () {
+            console.log('share credential');
+            const credentialQuery = {
+              web: {
+                VerifiableCredential: true,
+                BlockcertsCredential: true
+              }
+            };
+            const webCredential = await navigator.credentials.get(credentialQuery);
+            verifyCredential(webCredential.data);
+          });
+
+
+        credentialHandlerPolyfill
+                .loadOnce()
+                .then(console.log('CHAPI Polyfill loaded.'))
+                .catch(e => console.error('Error loading CHAPI polyfill:', e));
       });
     </script>
 
@@ -158,7 +184,11 @@
 
             <div class="verifier">
               <h2 class="hero-title">Blockcerts Universal Verifier</h2>
-                <blockcerts-verifier display-mode="fullscreen" theme="dark" clickable-urls="true"></blockcerts-verifier>
+              <blockcerts-verifier display-mode="fullscreen" theme="dark" clickable-urls="true"></blockcerts-verifier>
+              <p>You may share your Blockcerts with CHAPI if you have a compatible wallet:
+                <button class="js-share-credential-btn">Share credential</button>
+                <p>NOTA: the credential remains on the browser and is not stored anywhere.</p>
+              </p>
             </div>
 
           </div>
